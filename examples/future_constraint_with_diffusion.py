@@ -290,8 +290,11 @@ class DiffusionGuidedModel(Model):
         self.current_step = 0
 
     async def step(self):
-        # Get current text generated so far
+        # Get current text generated so far (strip BOS token which confuses diffusion model)
         current_text = str(self.context)
+        # Remove BOS token if present
+        if current_text.startswith("<|begin_of_text|>"):
+            current_text = current_text[len("<|begin_of_text|>"):]
 
         # Construct the suffix for diffusion guidance
         if self.target_word:
@@ -396,7 +399,7 @@ async def run_example(LLM, n_particles=1000, max_tokens=6, ess_threshold=0.5):
         max_tokens,
         suffix=suffix,
         lookahead=8,  # Look ahead 8 tokens
-        boost_amount=2.0,  # Boost diffusion suggestions by adding 2.0 to log prob
+        boost_amount=5.0,  # Boost diffusion suggestions by adding 5.0 to log prob (increased from 2.0)
         target_word=target_word,  # Pass the target word so diffusion sees it in the future
         top_k=5  # Get top-5 suggestions from diffusion
     )
